@@ -59,9 +59,11 @@ php flarum migrate
 php flarum cache:clear
 ```
 
-## Discuss
+## Support
 
-Questions, ideas and release notes: [Greeter on discuss.flarum.org](https://discuss.flarum.org/d/39996-greeter).
+- **Support forum:** [Greeter on ernestdefoe.online](https://ernestdefoe.online/d/121)
+- **Flarum community:** [Greeter on discuss.flarum.org](https://discuss.flarum.org/d/39996-greeter)
+- **Bug reports:** [GitHub issues](https://github.com/ernestdefoe/greeter/issues)
 
 ## Licence
 
