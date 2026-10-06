@@ -12,6 +12,7 @@
     "license": "MIT",
     "homepage": "https://github.com/ernestdefoe/greeter",
     "support": {
+        "forum": "https://discuss.flarum.org/d/39996-greeter",
         "issues": "https://github.com/ernestdefoe/greeter/issues",
         "source": "https://github.com/ernestdefoe/greeter"
     },
