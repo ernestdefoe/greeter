@@ -59,6 +59,10 @@ php flarum migrate
 php flarum cache:clear
 ```
 
+## Discuss
+
+Questions, ideas and release notes: [Greeter on discuss.flarum.org](https://discuss.flarum.org/d/39996-greeter).
+
 ## Licence
 
 MIT. See [LICENSE](LICENSE).
