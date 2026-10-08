@@ -5,6 +5,7 @@
  */
 
 use Ernestdefoe\Greeter\Api\TestController;
+use Ernestdefoe\Greeter\Api\WelcomeThrottler;
 use Ernestdefoe\Greeter\Listener\QueueWelcome;
 use Flarum\Extend;
 use Flarum\User\Event\Activated;
@@ -26,6 +27,9 @@ $extenders = [
 
     (new Extend\Routes('api'))
         ->post('/greeter/test', 'greeter.test', TestController::class),
+
+    (new Extend\ThrottleApi())
+        ->set('greeter-welcome', WelcomeThrottler::class),
 ];
 
 /*

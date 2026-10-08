@@ -23,6 +23,17 @@ use Psr\Log\LoggerInterface;
  */
 class Greeter
 {
+    /**
+     * Set only while the welcome is being handed to flarum/messages, so
+     * {@see Api\WelcomeThrottler} can exempt that one internal request.
+     */
+    private static bool $sending = false;
+
+    public static function sending(): bool
+    {
+        return self::$sending;
+    }
+
     public function __construct(
         private SettingsRepositoryInterface $settings,
         private ExtensionManager $extensions,
@@ -159,16 +170,22 @@ class Greeter
                 $conversation = $conversations->pair($sender, $user);
                 $conversations->send($conversation, $sender, 'text', $body);
             } else {
-                $response = $this->container->make(ApiClient::class)
-                    ->withActor($sender)
-                    ->withBody(['data' => [
-                        'type' => 'dialog-messages',
-                        'attributes' => [
-                            'content' => $body,
-                            'users' => [['type' => 'users', 'id' => (string) $user->id]],
-                        ],
-                    ]])
-                    ->post('/dialog-messages');
+                self::$sending = true;
+
+                try {
+                    $response = $this->container->make(ApiClient::class)
+                        ->withActor($sender)
+                        ->withBody(['data' => [
+                            'type' => 'dialog-messages',
+                            'attributes' => [
+                                'content' => $body,
+                                'users' => [['type' => 'users', 'id' => (string) $user->id]],
+                            ],
+                        ]])
+                        ->post('/dialog-messages');
+                } finally {
+                    self::$sending = false;
+                }
 
                 // 🚨 The API client does not throw on a refusal; it returns it.
                 if ($response->getStatusCode() >= 300) {

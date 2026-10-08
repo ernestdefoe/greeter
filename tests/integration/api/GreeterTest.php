@@ -29,13 +29,13 @@ class GreeterTest extends TestCase
         ]);
     }
 
-    private function register(bool $confirmed): int
+    private function register(bool $confirmed, string $username = 'newcomer'): int
     {
         $response = $this->send($this->request('POST', '/api/users', [
             'authenticatedAs' => 1,
             'json' => ['data' => ['type' => 'users', 'attributes' => [
-                'username' => 'newcomer',
-                'email' => 'newcomer@machine.local',
+                'username' => $username,
+                'email' => $username.'@machine.local',
                 'password' => 'a-long-enough-password',
                 'isEmailConfirmed' => $confirmed,
             ]]],
@@ -94,6 +94,21 @@ class GreeterTest extends TestCase
         $this->assertSame(200, $response->getStatusCode(), (string) $response->getBody());
 
         $this->assertCount(1, $this->welcomes($id));
+    }
+
+    #[Test]
+    public function every_newcomer_is_welcomed_however_fast_they_arrive()
+    {
+        // A sender who is not an admin, so nothing exempts them from Flarum
+        // 2.0's limits on members' messages: one every 10 seconds, and 10 new
+        // conversations an hour. A welcome is the forum speaking, not a member,
+        // and a busy hour of sign-ups must not silence it.
+        $this->setting('ernestdefoe-greeter.sender', 'normal');
+
+        for ($i = 1; $i <= 11; $i++) {
+            $id = $this->register(true, "newcomer$i");
+            $this->assertCount(1, $this->welcomes($id), "Newcomer $i is welcomed");
+        }
     }
 
     #[Test]
