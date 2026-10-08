@@ -22,8 +22,26 @@ app.initializers.add('ernestdefoe-greeter', () => {
       options: { message: t('channel_message'), email: t('channel_email'), both: t('channel_both') },
       default: 'message',
     })
-    .registerSetting({ setting: 'ernestdefoe-greeter.sender', type: 'text', label: t('sender'), help: t('sender_help'), placeholder: extractText(t('sender_placeholder')) })
-    .registerSetting({ setting: 'ernestdefoe-greeter.subject', type: 'text', label: t('subject'), help: t('subject_help', placeholders), placeholder: extractText(t('default_subject_placeholder', placeholders)) })
-    .registerSetting({ setting: 'ernestdefoe-greeter.body', type: 'textarea', label: t('body'), help: t('body_help', placeholders), placeholder: extractText(t('default_body_placeholder', placeholders)) })
+    .registerSetting({
+      setting: 'ernestdefoe-greeter.sender',
+      type: 'text',
+      label: t('sender'),
+      help: t('sender_help'),
+      placeholder: extractText(t('sender_placeholder')),
+    })
+    .registerSetting({
+      setting: 'ernestdefoe-greeter.subject',
+      type: 'text',
+      label: t('subject'),
+      help: t('subject_help', placeholders),
+      placeholder: extractText(t('default_subject_placeholder', placeholders)),
+    })
+    .registerSetting({
+      setting: 'ernestdefoe-greeter.body',
+      type: 'textarea',
+      label: t('body'),
+      help: t('body_help', placeholders),
+      placeholder: extractText(t('default_body_placeholder', placeholders)),
+    })
     .registerSetting(() => <TestButton />);
 });
