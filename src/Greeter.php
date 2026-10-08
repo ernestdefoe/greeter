@@ -49,7 +49,7 @@ class Greeter
     public function due(User $user): bool
     {
         return (bool) $this->setting('enabled')
-            && $user->greeter_welcomed_at === null
+            && $user->getAttribute('greeter_welcomed_at') === null
             && $user->is_email_confirmed
             && ! in_array($user->getAttribute('gatehouse_status'), ['pending', 'declined'], true);
     }
