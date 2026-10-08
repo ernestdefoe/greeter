@@ -36,7 +36,7 @@ class Greeter
 
     private function setting(string $key, mixed $default = null): mixed
     {
-        return $this->settings->get('ernestdefoe-greeter.' . $key, $default);
+        return $this->settings->get('ernestdefoe-greeter.'.$key, $default);
     }
 
     /**
@@ -94,14 +94,14 @@ class Greeter
         $raw = trim((string) $this->setting($kind));
 
         if ($raw === '') {
-            $raw = (string) $this->translator->trans('ernestdefoe-greeter.lib.default_' . $kind);
+            $raw = (string) $this->translator->trans('ernestdefoe-greeter.lib.default_'.$kind);
         }
 
         return strtr($raw, [
-            '{username}'     => (string) $user->username,
+            '{username}' => (string) $user->username,
             '{display_name}' => (string) $user->display_name,
-            '{forum}'        => (string) $this->settings->get('forum_title'),
-            '{url}'          => $this->url->to('forum')->base(),
+            '{forum}' => (string) $this->settings->get('forum_title'),
+            '{url}' => $this->url->to('forum')->base(),
         ]);
     }
 
@@ -162,17 +162,17 @@ class Greeter
                 $response = $this->container->make(ApiClient::class)
                     ->withActor($sender)
                     ->withBody(['data' => [
-                        'type'       => 'dialog-messages',
+                        'type' => 'dialog-messages',
                         'attributes' => [
                             'content' => $body,
-                            'users'   => [['type' => 'users', 'id' => (string) $user->id]],
+                            'users' => [['type' => 'users', 'id' => (string) $user->id]],
                         ],
                     ]])
                     ->post('/dialog-messages');
 
                 // 🚨 The API client does not throw on a refusal; it returns it.
                 if ($response->getStatusCode() >= 300) {
-                    $this->log->warning('[greeter] the welcome message to ' . $user->id . ' was refused: ' . substr((string) $response->getBody(), 0, 300));
+                    $this->log->warning('[greeter] the welcome message to '.$user->id.' was refused: '.substr((string) $response->getBody(), 0, 300));
 
                     return 'failed';
                 }
@@ -180,7 +180,7 @@ class Greeter
 
             return 'sent';
         } catch (\Throwable $e) {
-            $this->log->warning('[greeter] could not send the welcome message to ' . $user->id . ': ' . $e->getMessage());
+            $this->log->warning('[greeter] could not send the welcome message to '.$user->id.': '.$e->getMessage());
 
             return 'failed';
         }
@@ -210,7 +210,7 @@ class Greeter
 
             return 'sent';
         } catch (\Throwable $e) {
-            $this->log->warning('[greeter] could not email the welcome to ' . $user->id . ': ' . $e->getMessage());
+            $this->log->warning('[greeter] could not email the welcome to '.$user->id.': '.$e->getMessage());
 
             return 'failed';
         }

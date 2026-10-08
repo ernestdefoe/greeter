@@ -12,9 +12,9 @@ use Flarum\User\Event\Registered;
 
 $extenders = [
     (new Extend\Frontend('admin'))
-        ->js(__DIR__ . '/js/dist/admin.js'),
+        ->js(__DIR__.'/js/dist/admin.js'),
 
-    new Extend\Locales(__DIR__ . '/locale'),
+    new Extend\Locales(__DIR__.'/locale'),
 
     (new Extend\Settings())
         ->default('ernestdefoe-greeter.enabled', false)
