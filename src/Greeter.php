@@ -65,20 +65,65 @@ class Greeter
             && ! in_array($user->getAttribute('gatehouse_status'), ['pending', 'declined'], true);
     }
 
+    /** A welcome that keeps failing is tried this many times, then left alone. */
+    public const MAX_ATTEMPTS = 5;
+
+    /** How long to wait after failed attempt $attempt: 15 minutes, 1 hour, 4 hours, 16 hours. */
+    public static function backoffMinutes(int $attempt): int
+    {
+        return 15 * 4 ** max(0, $attempt - 1);
+    }
+
+    /** Whether a member with $attempts failed attempts, the last at $last, may be tried again now. */
+    public static function retryDue(int $attempts, mixed $last): bool
+    {
+        if ($attempts === 0) {
+            return true;
+        }
+
+        if ($attempts >= self::MAX_ATTEMPTS || $last === null) {
+            return false;
+        }
+
+        return Carbon::parse($last)->addMinutes(self::backoffMinutes($attempts))->lte(Carbon::now());
+    }
+
     /**
-     * Send the welcome. Marked as sent FIRST, so two triggers arriving together
-     * cannot welcome somebody twice; a delivery failure is logged, not retried
-     * into a second message.
+     * Send the welcome.
+     *
+     * 🚨 Marked as sent only AFTER a channel has delivered it — the moment the
+     * send call returns, before anything else can fail — so a failed send is
+     * retried ({@see Console\RetryWelcomesCommand}) and a successful one is never
+     * repeated. Two triggers arriving together cannot both send: each attempt
+     * first claims itself by bumping the attempt count from the value it read,
+     * and only one of them can.
      *
      * @return array{message: string, email: string} what happened to each channel
      */
     public function welcome(User $user, bool $test = false): array
     {
+        $attempts = 0;
+
         if (! $test) {
+            // A stale $user is safe: the claim below then matches no row.
+            if ($user->getAttribute('greeter_welcomed_at') !== null) {
+                return ['message' => 'already', 'email' => 'already'];
+            }
+
+            $attempts = (int) $user->getAttribute('greeter_welcome_attempts');
+
+            if (! self::retryDue($attempts, $user->getAttribute('greeter_welcome_last_attempt_at'))) {
+                return ['message' => 'later', 'email' => 'later'];
+            }
+
             $claimed = User::query()
-                ->where('id', $user->id)
+                ->whereKey($user->id)
                 ->whereNull('greeter_welcomed_at')
-                ->update(['greeter_welcomed_at' => Carbon::now()]);
+                ->where('greeter_welcome_attempts', $attempts)
+                ->update([
+                    'greeter_welcome_attempts' => $attempts + 1,
+                    'greeter_welcome_last_attempt_at' => Carbon::now(),
+                ]);
 
             if (! $claimed) {
                 return ['message' => 'already', 'email' => 'already'];
@@ -87,16 +132,38 @@ class Greeter
 
         $channel = (string) ($this->setting('channel') ?: 'message');
         $result = ['message' => 'off', 'email' => 'off'];
+        $marked = false;
 
-        if (in_array($channel, ['message', 'both'], true)) {
-            $result['message'] = $this->sendMessage($user);
+        foreach (['message', 'email'] as $kind) {
+            if (! in_array($channel, [$kind, 'both'], true)) {
+                continue;
+            }
+
+            $result[$kind] = $kind === 'message' ? $this->sendMessage($user) : $this->sendEmail($user);
+
+            if (! $test && ! $marked && $result[$kind] === 'sent') {
+                $this->markWelcomed($user);
+                $marked = true;
+            }
         }
 
-        if (in_array($channel, ['email', 'both'], true)) {
-            $result['email'] = $this->sendEmail($user);
+        if (! $test && ! $marked) {
+            if (in_array('failed', $result, true)) {
+                $this->log->warning('[greeter] the welcome to '.$user->id.' failed (attempt '.($attempts + 1).' of '.self::MAX_ATTEMPTS.')'
+                    .($attempts + 1 < self::MAX_ATTEMPTS ? '; it will be retried' : '; giving up'));
+            } else {
+                // Nothing to deliver it through (no message system, no sender):
+                // retrying cannot help, so it counts as done, as it always has.
+                $this->markWelcomed($user);
+            }
         }
 
         return $result;
+    }
+
+    private function markWelcomed(User $user): void
+    {
+        User::query()->whereKey($user->id)->update(['greeter_welcomed_at' => Carbon::now()]);
     }
 
     /** The welcome text with its placeholders filled. */

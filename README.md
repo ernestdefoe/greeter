@@ -38,6 +38,7 @@ Leave the text empty for a friendly standard welcome.
 ## Good to know
 
 - **Sending happens in the background**, so confirming an email or approving someone never waits on a mail server.
+- **A welcome that fails to send is tried again**, after 15 minutes, 1 hour, 4 hours and 16 hours, then left alone. Retries run on Flarum's scheduler, so keep its cron job running.
 - **A refused message doesn't block the email.** If the member's own privacy settings refuse messages from the sender, that is logged and the email still goes, when the email is switched on.
 - **Apostrophes and ampersands survive.** "Don't be shy & say hello" arrives exactly as written, in the message and the email.
 

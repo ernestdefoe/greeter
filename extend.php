@@ -6,10 +6,12 @@
 
 use Ernestdefoe\Greeter\Api\TestController;
 use Ernestdefoe\Greeter\Api\WelcomeThrottler;
+use Ernestdefoe\Greeter\Console\RetryWelcomesCommand;
 use Ernestdefoe\Greeter\Listener\QueueWelcome;
 use Flarum\Extend;
 use Flarum\User\Event\Activated;
 use Flarum\User\Event\Registered;
+use Illuminate\Console\Scheduling\Event;
 
 $extenders = [
     (new Extend\Frontend('admin'))
@@ -27,6 +29,13 @@ $extenders = [
 
     (new Extend\Routes('api'))
         ->post('/greeter/test', 'greeter.test', TestController::class),
+
+    // A welcome that failed to send is tried again, with a growing wait.
+    (new Extend\Console())
+        ->command(RetryWelcomesCommand::class)
+        ->schedule(RetryWelcomesCommand::class, function (Event $event): void {
+            $event->everyFiveMinutes();
+        }),
 
     (new Extend\ThrottleApi())
         ->set('greeter-welcome', WelcomeThrottler::class),
