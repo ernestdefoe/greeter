@@ -7,6 +7,9 @@ use Illuminate\Database\Schema\Builder;
  * How many times Greeter has tried to welcome a member, and when it last
  * tried, so a welcome that failed to send is retried later instead of lost.
  * Indexed so the retry sweep reads only the handful still waiting.
+ *
+ * Written out rather than with Migration::addColumns(): that helper's down()
+ * drops the columns without first dropping the index, which SQLite refuses.
  */
 return [
     'up' => function (Builder $schema) {

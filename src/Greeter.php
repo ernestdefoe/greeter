@@ -26,6 +26,11 @@ class Greeter
     /**
      * Set only while the welcome is being handed to flarum/messages, so
      * {@see Api\WelcomeThrottler} can exempt that one internal request.
+     *
+     * Not a request attribute: Flarum\Api\Client builds the internal request
+     * itself and copies nothing but the actor, IP and session onto it, so there
+     * is no way to mark it. Each PHP request runs in its own process and the
+     * flag is reset in a finally block, so it cannot leak to another request.
      */
     private static bool $sending = false;
 
